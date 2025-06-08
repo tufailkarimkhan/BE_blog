@@ -20,9 +20,9 @@ pipeline {
     stages {
         stage('1. Checkout Code') {
             steps {
-                git branch: 'main',
+                git branch: 'master',
                     url:           'https://github.com/tufailkarimkhan/BE_blog.git',
-                    credentialsId: 'github-creds'
+
             }
         }
 
@@ -104,6 +104,16 @@ pipeline {
                         // sh "docker push ${env.DOCKER_IMAGE_NAME}:latest"
                     }
                     echo "Docker Image pushed: ${env.DOCKER_IMAGE_NAME}:${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage('6. Deploy Application Containers') {
+            steps {
+                script {
+                    echo "Starting backend and DB containers using docker-compose"
+                    sh 'docker-compose down' // Optional: stop old containers
+                    sh 'docker-compose up -d'
                 }
             }
         }
