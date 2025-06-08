@@ -1,0 +1,45 @@
+services:
+  blog-mysql-db: # Changed service name for consistency, was 'mysql'
+    image: mysql:8.0
+    container_name: blog-mysql-DB # This was already your desired container name
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root # CHANGE THIS to a secure root password
+      MYSQL_DATABASE: my_blog                       # Database to be created
+      MYSQL_USER: user                     # New application username
+      MYSQL_PASSWORD: root      # Password for the application user - CHANGE THIS
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - blog-network
+
+  springboot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tufailkarim/blog-backend-java:V1.0.0 # This will be the tag for the built image
+    container_name: springboot-blog-app # Optional: give your app container a consistent name
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Make sure the hostname 'blog-mysql-db' matches the MySQL service name above
+      SPRING_DATASOURCE_URL: jdbc:mysql://blog-mysql-db:3306/my_blog?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: user # Use the new application user
+      SPRING_DATASOURCE_PASSWORD: root # Use the new application user's password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update # Or validate, create, create-drop etc.
+      # Add any other environment variables your Spring Boot app needs
+    depends_on:
+      - blog-mysql-db # Depends on the MySQL service name
+    networks:
+      - blog-network
+
+volumes:
+  mysql-data: # The volume name here must match the one used in the mysql service
+    driver: local
+
+networks:
+  blog-network:
+    driver: bridge
